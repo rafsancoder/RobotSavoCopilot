@@ -1,126 +1,50 @@
-# RobotSavoCopilot
+# Welcome to your Expo app 👋
 
-RobotSavoCopilot is an Android app built using Kotlin and Jetpack Compose.  
-It acts as a control dashboard for a Savonia autonomous robot, featuring navigation, map view, voice commands, and more.  
-This project demonstrates UI design, state management, navigation, data persistence, and GitHub workflow.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Features
+## Get started
 
-### Home Dashboard
-- Product-style background with robot images
-- Navigation to all main features
-- Clean and modern UI
+1. Install dependencies
 
-### Navigation Page
-- Attractive futuristic background
-- (Future) Robot path simulation
-- Smooth back navigation
+   ```bash
+   npm install
+   ```
 
-### Map Page
-- Map-themed background
-- Launch Google Maps with one button
-- Placeholder information for future live robot tracking
+2. Start the app
 
-### Voice Commands Page
-- Record voice commands with microphone
-- Save recordings locally
-- Play back saved recordings
-- Delete recordings
-- Beautiful blurred robot background
+   ```bash
+   npx expo start
+   ```
 
-### (Optional Extension) Missions Manager – Room Database
-- Add missions for the robot
-- Edit/update missions
-- Delete missions
-- Stored locally using Room + ViewModel + Flow
+In the output, you'll find options to open the app in a
 
-## Tech Stack
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-- Kotlin
-- Jetpack Compose
-- Material 3
-- MVVM Architecture
-- Compose Navigation
-- MediaRecorder + MediaPlayer
-- Internal Storage for audio files
-- (Optional) Room Database
-- Android Studio Koala+
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Screenshots
+## Get a fresh project
 
-(Add your own images here)
-Example:
-- screenshots/home.jpg
-- screenshots/navigation.jpg
-- screenshots/map.jpg
-- screenshots/voice.jpg
+When you're ready, run:
 
-## How to Run
+```bash
+npm run reset-project
+```
 
-1. Clone the repository:
-   git clone https://github.com/YOUR_USERNAME/RobotSavoCopilot.git
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-2. Open in Android Studio
+## Learn more
 
-3. Let Gradle sync
+To learn more about developing your project with Expo, look at the following resources:
 
-4. Run on emulator or real Android device (API 26+)
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-5. When asked, allow microphone permission to enable voice recording
+## Join the community
 
-## Project Structure
+Join our community of developers creating universal apps.
 
-app/
- └── src/main/java/com/example/robotsavocopilot
-      ├── MainActivity.kt
-      ├── ui/
-      │   ├── home/
-      │   ├── navigation/
-      │   ├── map/
-      │   └── voice/
-      ├── data/ (for Room database)
-      └── viewmodel/
-
-## Testing
-
-Project includes required tests (unit/UI), such as:
-- ViewModel logic test
-- DAO test
-- Simple UI screen test
-
-## 📱 Screenshots
-
-### 🏠 Home Screen
-![Home Screen](screenshots/home.png)
-
-### 📍 Navigation Screen
-![Navigation Screen](screenshots/navigation.png)
-
-### 🗺️ Map Screen
-![Map Screen](screenshots/map.png)
-
-### 🎤 Voice Commands
-![Voice Commands](screenshots/voice.png)
-
-### 📂 Menu Drawer
-![Menu Drawer](screenshots/menu.png)
-
-
-## Release
-
-The final submission includes:
-- Public GitHub repository
-- README.md
-- Screenshots
-- Release APK / AAB (v1.0)
-- PDF project report
-
-## License
-
-MIT License © 2025
-
-## Note on AI Assistance
-
-Some parts of this project were created with help from AI tools (ChatGPT),  
-as allowed in the assignment instructions.
-
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
