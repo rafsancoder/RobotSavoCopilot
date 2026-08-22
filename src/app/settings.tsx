@@ -1,5 +1,4 @@
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppScreen } from '../components/layout/AppScreen';
@@ -9,30 +8,26 @@ import {
     buildServerEndpoints,
     DEFAULT_SERVER_CONFIG,
     ServerConfig,
-    ServerProtocol,
     validateServerConfig,
 } from '../utils/server-config';
-
-const STORAGE_KEY = '@robot-savo/server-config';
+import { checkSavoMind, loadPlaybackTarget, loadServerConfig, PlaybackTarget, savePlaybackTarget, saveServerConfig } from '../services/savomind-api';
 
 export default function SettingsScreen() {
     const { colors } = getRobotTheme();
     const [config, setConfig] = useState<ServerConfig>(DEFAULT_SERVER_CONFIG);
     const [saved, setSaved] = useState(false);
     const [loaded, setLoaded] = useState(false);
+    const [connected, setConnected] = useState<boolean | null>(null);
+    const [playbackTarget, setPlaybackTarget] = useState<PlaybackTarget>('phone');
 
-    const { host, llmPort, sttPort, protocol } = config;
-    const { wsUrl, llmUrl, sttUrl } = buildServerEndpoints(config);
+    const { savoMindUrl } = buildServerEndpoints(config);
 
     useEffect(() => {
         async function loadConfig() {
             try {
-                const stored = await AsyncStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    const parsed = JSON.parse(stored) as Partial<ServerConfig>;
-                    const candidate = { ...DEFAULT_SERVER_CONFIG, ...parsed };
-                    if (!validateServerConfig(candidate)) setConfig(candidate);
-                }
+                const [storedConfig, storedPlaybackTarget] = await Promise.all([loadServerConfig(), loadPlaybackTarget()]);
+                setConfig(storedConfig);
+                setPlaybackTarget(storedPlaybackTarget);
             } catch {
                 Alert.alert('Settings Error', 'Saved server settings could not be loaded. Defaults are being used.');
             } finally {
@@ -45,6 +40,7 @@ export default function SettingsScreen() {
     function updateConfig(patch: Partial<ServerConfig>) {
         setConfig(current => ({ ...current, ...patch }));
         setSaved(false);
+        setConnected(null);
     }
 
     async function handleSave() {
@@ -54,7 +50,7 @@ export default function SettingsScreen() {
             return;
         }
         try {
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+            await Promise.all([saveServerConfig(config), savePlaybackTarget(playbackTarget)]);
             setSaved(true);
             Alert.alert('Settings Saved', 'Configuration will be restored the next time the app starts.');
         } catch {
@@ -62,16 +58,20 @@ export default function SettingsScreen() {
         }
     }
 
-    function handleTest() {
+    async function handleTest() {
         const error = validateServerConfig(config);
         if (error) {
             Alert.alert('Invalid Configuration', error);
             return;
         }
-        Alert.alert(
-            'Test Connection (MOCK)',
-            `[MOCK] Would attempt:\n\nLLM: ${llmUrl}\nSTT: ${sttUrl}\nWebSocket: ${wsUrl}\n\nBackend not connected yet.`
-        );
+        try {
+            const ok = await checkSavoMind(config);
+            setConnected(ok);
+            Alert.alert(ok ? 'Connected' : 'Not Ready', ok ? `SavoMind is reachable at ${savoMindUrl}.` : 'SavoMind did not report healthy.');
+        } catch (connectionError) {
+            setConnected(false);
+            Alert.alert('Connection Failed', connectionError instanceof Error ? connectionError.message : `Could not reach ${savoMindUrl}.`);
+        }
     }
 
     return (
@@ -82,7 +82,7 @@ export default function SettingsScreen() {
                     <Text style={[styles.screenTitle, { color: colors.text }]}>Settings</Text>
                     <Text style={[styles.screenSub, { color: colors.textMuted }]}>Server connection configuration</Text>
                 </View>
-                <StatusPill label="NOT CONNECTED" tone="warning" dot />
+                <StatusPill label={connected === true ? 'CONNECTED' : connected === false ? 'OFFLINE' : 'NOT TESTED'} tone={connected === true ? 'success' : connected === false ? 'danger' : 'warning'} dot />
             </View>
 
             {/* ── Server config ── */}
@@ -94,58 +94,39 @@ export default function SettingsScreen() {
                 <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
 
                 <Field
-                    label="Server IP Address"
-                    placeholder="e.g. 192.168.1.100"
-                    value={host}
-                    onChangeText={hostValue => updateConfig({ host: hostValue })}
-                    icon="wifi"
-                    keyboardType="decimal-pad"
-                    colors={colors}
-                />
-                <Field
-                    label="LLM Server Port"
-                    placeholder="8000"
-                    value={llmPort}
-                    onChangeText={value => updateConfig({ llmPort: value })}
+                    label="SavoMind Base URL"
+                    placeholder="http://10.149.45.61:8001"
+                    value={config.savoMindBaseUrl}
+                    onChangeText={value => updateConfig({ savoMindBaseUrl: value })}
                     icon="language"
-                    keyboardType="number-pad"
+                    keyboardType="url"
                     colors={colors}
                 />
-                <Field
-                    label="STT Server Port"
-                    placeholder="9000"
-                    value={sttPort}
-                    onChangeText={value => updateConfig({ sttPort: value })}
-                    icon="mic"
-                    keyboardType="number-pad"
-                    colors={colors}
-                />
-                <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Connection Security</Text>
+                <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
+                <Text style={[styles.outputLabel, { color: colors.textMuted }]}>Speaker output</Text>
                 <View style={styles.protocolRow}>
-                    {(['https', 'http'] as ServerProtocol[]).map(option => (
+                    {(['phone', 'robot'] as PlaybackTarget[]).map(option => (
                         <Pressable
                             key={option}
-                            onPress={() => updateConfig({ protocol: option })}
+                            onPress={() => { setPlaybackTarget(option); setSaved(false); }}
                             accessibilityRole="radio"
-                            accessibilityLabel={option === 'https' ? 'Secure HTTPS and WSS' : 'Local development HTTP and WS'}
-                            accessibilityState={{ checked: protocol === option }}
+                            accessibilityLabel={option === 'phone' ? 'Phone speaker' : 'Robot speaker'}
+                            accessibilityState={{ checked: playbackTarget === option }}
                             style={[
                                 styles.protocolButton,
                                 {
-                                    backgroundColor: protocol === option ? withAlpha(colors.primary, '20') : colors.surfaceSoft,
-                                    borderColor: protocol === option ? colors.primary : colors.border,
+                                    backgroundColor: playbackTarget === option ? withAlpha(colors.primary, '20') : colors.surfaceSoft,
+                                    borderColor: playbackTarget === option ? colors.primary : colors.border,
                                 },
                             ]}
                         >
-                            <Text style={[styles.protocolText, { color: protocol === option ? colors.primary : colors.textMuted }]}>
-                                {option === 'https' ? 'HTTPS / WSS' : 'HTTP / WS (local only)'}
+                            <Text style={[styles.protocolText, { color: playbackTarget === option ? colors.primary : colors.textMuted }]}>
+                                {option === 'phone' ? 'Phone speaker' : 'Robot speaker'}
                             </Text>
                         </Pressable>
                     ))}
                 </View>
-                {protocol === 'http' && (
-                    <Text style={[styles.insecureWarning, { color: colors.warning }]}>Unencrypted traffic. Use only on a trusted local development network.</Text>
-                )}
+                <Text style={[styles.insecureWarning, { color: colors.warning }]}>HTTP traffic is unencrypted. Use only on the trusted robot network.</Text>
             </View>
 
             {/* ── Endpoint preview ── */}
@@ -155,11 +136,11 @@ export default function SettingsScreen() {
                     <Text style={[styles.sectionTitle, { color: colors.text }]}>Endpoint Preview</Text>
                 </View>
                 <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
-                <EndpointRow label="LLM API" url={llmUrl} colors={colors} />
+                <EndpointRow label="SavoMind" url={savoMindUrl} colors={colors} />
                 <View style={[styles.endpointDivider, { backgroundColor: colors.border }]} />
-                <EndpointRow label="STT API" url={sttUrl} colors={colors} />
+                <EndpointRow label="Text" url={`${savoMindUrl}/app/chat`} colors={colors} />
                 <View style={[styles.endpointDivider, { backgroundColor: colors.border }]} />
-                <EndpointRow label="WebSocket" url={wsUrl} colors={colors} />
+                <EndpointRow label="Voice" url={`${savoMindUrl}/app/voice/turn`} colors={colors} />
             </View>
 
             {/* ── Buttons ── */}
@@ -179,7 +160,7 @@ export default function SettingsScreen() {
             </Pressable>
 
             <Pressable
-                onPress={handleTest}
+                onPress={() => void handleTest()}
                 accessibilityRole="button"
                 accessibilityLabel="Test server connection"
                 style={({ pressed }) => [
@@ -195,13 +176,13 @@ export default function SettingsScreen() {
             <View style={[styles.apiPlan, { backgroundColor: withAlpha(colors.primary, '10'), borderColor: withAlpha(colors.primary, '30') }]}>
                 <View style={styles.apiPlanHeader}>
                     <MaterialIcons name="api" size={15} color={colors.primary} />
-                    <Text style={[styles.apiPlanTitle, { color: colors.primary }]}>Backend API Plan</Text>
+                    <Text style={[styles.apiPlanTitle, { color: colors.primary }]}>Live SavoMind API</Text>
                 </View>
                 {[
                     { method: 'GET', path: '/robot/status', desc: 'Robot status, mode, battery' },
                     { method: 'GET', path: '/robot/pose', desc: 'X, Y, yaw, frame, localization' },
-                    { method: 'POST', path: '/chat', desc: 'LLM conversation endpoint' },
-                    { method: 'POST', path: '/robot/command', desc: 'Safe command dispatch to ROS 2' },
+                    { method: 'POST', path: '/app/chat', desc: 'Full SavoMind text pipeline' },
+                    { method: 'POST', path: '/app/voice/turn', desc: 'STT, intelligence, and TTS pipeline' },
                 ].map(e => (
                     <View key={e.path} style={styles.apiRow}>
                         <View style={[styles.apiMethod, { backgroundColor: withAlpha(e.method === 'GET' ? colors.success : colors.warning, '25') }]}>
@@ -273,6 +254,7 @@ const styles = StyleSheet.create({
     sectionDivider: { height: 1 },
     field: { padding: 14, gap: 6, borderBottomWidth: 0 },
     fieldLabel: { fontSize: 12, fontWeight: '600' },
+    outputLabel: { fontSize: 12, fontWeight: '600', paddingHorizontal: 14, paddingTop: 14 },
     fieldInput: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
     fieldText: { flex: 1, fontSize: 14 },
     protocolRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 14, paddingTop: 6 },

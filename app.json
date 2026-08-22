@@ -12,7 +12,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.robotsavo.copilot",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Robot Savo Copilot connects to your SavoMind server on the local network.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,7 +34,14 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Robot Savo Copilot to record voice messages for SavoMind."
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

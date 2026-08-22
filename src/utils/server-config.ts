@@ -1,40 +1,30 @@
-export type ServerProtocol = 'https' | 'http';
-
 export type ServerConfig = {
-    host: string;
-    llmPort: string;
-    sttPort: string;
-    protocol: ServerProtocol;
+    savoMindBaseUrl: string;
 };
 
 export const DEFAULT_SERVER_CONFIG: ServerConfig = {
-    host: '192.168.1.100',
-    llmPort: '8000',
-    sttPort: '9000',
-    protocol: 'https',
+    // Isolated SavoMind test API. Production will use the same host on port 8000.
+    savoMindBaseUrl: 'http://10.149.45.61:8001',
 };
 
 export function validateServerConfig(config: ServerConfig): string | null {
-    const host = config.host.trim();
-    if (!host || /[\s/:?#\[\]@]/.test(host)) {
-        return 'Enter a hostname or IP address without a protocol, port, or path.';
+    const value = config.savoMindBaseUrl.trim();
+    try {
+        const url = new URL(value);
+        if (!['http:', 'https:'].includes(url.protocol) || !url.hostname) {
+            return 'Enter a complete HTTP or HTTPS SavoMind base URL.';
+        }
+        if (url.pathname !== '/' || url.search || url.hash || url.username || url.password) {
+            return 'Enter only the SavoMind base URL, without a path, query, credentials, or fragment.';
+        }
+    } catch {
+        return 'Enter a valid SavoMind base URL, for example http://10.149.45.61:8001.';
     }
-
-    for (const [label, value] of [['LLM', config.llmPort], ['STT', config.sttPort]] as const) {
-        if (!/^\d+$/.test(value)) return `${label} port must contain only numbers.`;
-        const port = Number(value);
-        if (port < 1 || port > 65535) return `${label} port must be between 1 and 65535.`;
-    }
-
     return null;
 }
 
 export function buildServerEndpoints(config: ServerConfig) {
-    const host = config.host.trim();
-    const webSocketProtocol = config.protocol === 'https' ? 'wss' : 'ws';
     return {
-        llmUrl: `${config.protocol}://${host}:${config.llmPort}`,
-        sttUrl: `${config.protocol}://${host}:${config.sttPort}`,
-        wsUrl: `${webSocketProtocol}://${host}:${config.llmPort}/ws/robot`,
+        savoMindUrl: config.savoMindBaseUrl.trim().replace(/\/$/, ''),
     };
 }

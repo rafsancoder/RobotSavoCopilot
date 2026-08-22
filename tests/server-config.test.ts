@@ -1,27 +1,27 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildServerEndpoints, validateServerConfig } from '../src/utils/server-config.ts';
+import { buildServerEndpoints, DEFAULT_SERVER_CONFIG, validateServerConfig } from '../src/utils/server-config.ts';
 
-test('builds secure endpoints by default', () => {
+test('uses the isolated SavoMind HTTP endpoint by default', () => {
+    assert.equal(DEFAULT_SERVER_CONFIG.savoMindBaseUrl, 'http://10.149.45.61:8001');
+});
+
+test('builds one integrated SavoMind endpoint', () => {
     assert.deepEqual(
-        buildServerEndpoints({ host: 'robot.local', llmPort: '8000', sttPort: '9000', protocol: 'https' }),
-        {
-            llmUrl: 'https://robot.local:8000',
-            sttUrl: 'https://robot.local:9000',
-            wsUrl: 'wss://robot.local:8000/ws/robot',
-        },
+        buildServerEndpoints({ savoMindBaseUrl: 'https://robot.local:8000/' }),
+        { savoMindUrl: 'https://robot.local:8000' },
     );
 });
 
-test('rejects malformed hosts and ports', () => {
-    assert.match(validateServerConfig({ host: 'http://robot.local', llmPort: '8000', sttPort: '9000', protocol: 'https' }) ?? '', /hostname/);
-    assert.match(validateServerConfig({ host: 'robot.local', llmPort: '0', sttPort: '9000', protocol: 'https' }) ?? '', /between/);
-    assert.match(validateServerConfig({ host: 'robot.local', llmPort: 'abc', sttPort: '9000', protocol: 'https' }) ?? '', /numbers/);
+test('rejects malformed base URLs and URLs containing API paths', () => {
+    assert.match(validateServerConfig({ savoMindBaseUrl: 'robot.local:8000' }) ?? '', /HTTP/);
+    assert.match(validateServerConfig({ savoMindBaseUrl: 'ftp://robot.local' }) ?? '', /HTTP/);
+    assert.match(validateServerConfig({ savoMindBaseUrl: 'https://robot.local/app' }) ?? '', /without a path/);
 });
 
 test('allows explicitly selected local HTTP endpoints', () => {
     assert.equal(
-        buildServerEndpoints({ host: '192.168.1.100', llmPort: '8000', sttPort: '9000', protocol: 'http' }).wsUrl,
-        'ws://192.168.1.100:8000/ws/robot',
+        buildServerEndpoints({ savoMindBaseUrl: 'http://192.168.1.100:8000' }).savoMindUrl,
+        'http://192.168.1.100:8000',
     );
 });

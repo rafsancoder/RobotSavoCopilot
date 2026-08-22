@@ -25,6 +25,7 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+expo-start*.log
 
 # macOS
 .DS_Store
@@ -40,6 +41,9 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Separate local SavoMind backend checkout
+SavoMind/
 
 # generated native folders
 /ios
