@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { fetchWithTimeout } from '../src/services/request-timeout.ts';
+import {
+    DEFAULT_REQUEST_TIMEOUT_MS,
+    fetchWithTimeout,
+    VOICE_REQUEST_TIMEOUT_MS,
+} from '../src/services/request-timeout.ts';
+
+test('keeps default requests at 15 seconds and voice requests at 90 seconds', () => {
+    assert.equal(DEFAULT_REQUEST_TIMEOUT_MS, 15_000);
+    assert.equal(VOICE_REQUEST_TIMEOUT_MS, 90_000);
+});
 
 test('returns successful API responses', async () => {
     const response = await fetchWithTimeout('http://example.test', {}, 50, async () => new Response('{"ok":true}', { status: 200 }));

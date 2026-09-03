@@ -134,6 +134,12 @@ export default function HomeScreen() {
                     icon={<MaterialIcons name="my-location" size={20} color={colors.primary} />}
                 />
                 <ListItem
+                    title="Live Sensors"
+                    subtitle="Real-time Robot Savo telemetry"
+                    href="/sensors"
+                    icon={<MaterialCommunityIcons name="radar" size={20} color={colors.primary} />}
+                />
+                <ListItem
                     title="Settings"
                     subtitle="Server connection setup"
                     href="/settings"

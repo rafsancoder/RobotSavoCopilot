@@ -12,6 +12,15 @@ test('sends the persisted playback target in text and voice requests', () => {
     assert.match(apiSource, /loadPlaybackTarget\(\)/);
 });
 
+test('uses the dedicated timeout only for the voice turn', () => {
+    assert.match(apiSource, /fetchWithTimeout\(`\$\{baseUrl\}\/health`\)/);
+    assert.match(apiSource, /fetchWithTimeout\(`\$\{baseUrl\}\/app\/chat`, request\)/);
+    assert.match(
+        apiSource,
+        /fetchWithTimeout\(`\$\{baseUrl\}\/app\/voice\/turn`,[\s\S]*?VOICE_REQUEST_TIMEOUT_MS/,
+    );
+});
+
 test('normalizes explicit robot playback state from backend', () => {
     const turn = normalizeTurnResponse({
         ok: true,

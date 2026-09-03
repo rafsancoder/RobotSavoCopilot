@@ -4,7 +4,7 @@ import { File } from 'expo-file-system';
 
 import { buildServerEndpoints, DEFAULT_SERVER_CONFIG, ServerConfig, validateServerConfig } from '../utils/server-config';
 import { ConversationTurn, normalizeTurnResponse } from './conversation';
-import { DEFAULT_REQUEST_TIMEOUT_MS, fetchWithTimeout } from './request-timeout';
+import { fetchWithTimeout, VOICE_REQUEST_TIMEOUT_MS } from './request-timeout';
 
 export const SERVER_CONFIG_STORAGE_KEY = '@robot-savo/server-config';
 export const PLAYBACK_TARGET_STORAGE_KEY = '@robot-savo/playback-target';
@@ -109,7 +109,7 @@ export async function sendVoiceTurn(audioUri: string, sessionId: string): Promis
             response = await fetchWithTimeout(`${baseUrl}/app/voice/turn`, {
                 method: 'POST',
                 body: form,
-            }, DEFAULT_REQUEST_TIMEOUT_MS, expoFetch as unknown as typeof fetch);
+            }, VOICE_REQUEST_TIMEOUT_MS, expoFetch as unknown as typeof fetch);
         } catch (error) {
             throw connectionError(baseUrl, error);
         }

@@ -1,4 +1,5 @@
 export const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+export const VOICE_REQUEST_TIMEOUT_MS = 90_000;
 
 export async function fetchWithTimeout(
     input: string,

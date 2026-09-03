@@ -24,6 +24,7 @@ export default function RootLayout() {
                 <Stack.Screen name="chat" options={{ title: 'AI Chatbot' }} />
                 <Stack.Screen name="robot" options={{ title: 'Robot Description' }} />
                 <Stack.Screen name="localization" options={{ title: 'Localization' }} />
+                <Stack.Screen name="sensors" options={{ title: 'Live Sensors' }} />
                 <Stack.Screen name="settings" options={{ title: 'Settings' }} />
             </Stack>
         </>
