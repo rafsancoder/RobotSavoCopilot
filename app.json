@@ -8,7 +8,6 @@
     "scheme": "robotsavocopilot",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#050816",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.robotsavo.copilot",
@@ -41,7 +40,12 @@
           "microphonePermission": "Allow Robot Savo Copilot to record voice messages for SavoMind."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-font",
+      "expo-image",
+      "expo-web-browser",
+      "expo-splash-screen",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true
